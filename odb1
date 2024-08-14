@@ -1,0 +1,123 @@
+-- SQL(Structured Query Language)
+--		DB를 제어하는 언어
+--		그 다양한 DB메이커들이 공용
+--		대소문자 구별x -> 대문자로 인식
+
+-- Java : 프로그래밍 언어
+--		 변수, 조건문,....
+--			적재적소에 -> 창의성
+
+-- SQL : DB제어용 언어
+--		변수x, 조건문x, ...
+--			답이 나와있는 -> 창의성x -> 어렵다x
+--------------------------------------------------------------
+-- 용어
+-- table
+--		field, 열(column), 세로
+--		record, 행(row), data, 가로
+--------------------------------------------------------------
+-- 수업의 목표
+-- DBP : DB랑 연동된 프로그램 개발
+-- CRUD : 데이터를 CreateReadUpdateDelete
+--------------------------------------------------------------
+-- 테이블 만들기
+-- create table 테이블명(
+-- 		열제목 자료형 [옵션],
+--		필드명 자료형 [옵션],
+-- 		...
+-- );
+
+-- 옵션
+-- 		not null : 값 필수
+--		primary key : not null + 중복데이터 불허
+--					그 데이터를 대표하는 값, 데이터 찾을때 정확하게 찾아줄 기준 값
+--					-> 테이블에는 PK는 주는쪽으로
+--		autoincrement : 자동으로 숫자가 올라감 - 오라클에서는 없음
+
+-- 가격으로 찾으면 : 여러개 나올 수 
+-- 이름으로 찾으면 : 딱 1개(중복x)
+
+-- 그냥 필드명 쓰면 SQL 문법과 중복될까봐
+-- 테이블명적당히줄여서_이름 형태로 짓는 문화가 있음
+
+-- Oracle에서 영어/숫자 1글자 = 1byte
+--			 한글 1글자 = 3bytes
+
+-- 용량
+-- 		5 : 5bytes
+-- 		5 char : 5글자(영어든 한글이든)
+
+varchar2
+if(용량보다 적게쓰면) {
+}
+-- 자료형(OracleDB 한정)
+-- 		글자
+--			char(용량) : 고정사이즈
+--						띄어쓰기를 넣어서라도 무조건 용량대로 저장(HDD 비효율적)
+--						varchar2보다 빠를 것(CPU에 좋음)
+--						자리수가 일정한 상황
+--			varchar2(용량) : 가변사이즈
+--							용량보다 적게쓰면 용량을 조절해서 저장(HDD 효율적)
+--							char보다 느릴 것(CPU에 타격)
+--							일반적인 상황에서 주로 많이
+--		숫자
+--			number(용량)
+--			number(5) : 0 ~ 99999 (정수 5자리까지)
+--			number(5, 2) : 실수 xxx.xx(전체 5자리, 소숫점은 2자리)
+-- int : 21억
+--		시간/날짜
+--			date
+
+create table aug14_snack(
+	s_name varchar2(10 char) primary key,
+	s_price number(5) not null
+	
+);
+--------------------------------------------------------------
+-- 테이블 수정 - o, x
+
+
+-- 테이블 삭제
+-- drop table 테이블명 cascade constraint purge;
+drop table aug14_snack cascade constraint purge;
+--------------------------------------------------------------
+-- 데이터 넣기 - C
+-- insert into 테이블명(필드명, 필드명, ...)
+-- values(값, 값, 값, ...) - 위에랑 순서 맞춰서
+-- insert into 테이블명 values(값, 값, ..);
+--------------------------------------------------------------
+insert into aug14_snack(s_name, s_price) values('새우깡', 3000);
+-- 주로 이렇게 씀
+insert into aug14_snack values('양파링', 3000);
+insert into aug14_snack(s_name, s_price) values('멘토스', 1000);
+insert into aug14_snack(s_name, s_price) values('치토스', 2500);
+insert into aug14_snack(s_name, s_price) values('치토스', 3500);
+-- 순서 바꾸기 가능 - 의미가 있나..
+insert into aug14_snack(s_price, s_name) values(500, '새콤달콤');
+-- 특정 필드만 값 넣기 가능 - 그닥
+insert into aug14_snack(s_name) values('제크');
+-- 1 + 0 + 1 = 2
+-- 1 + null + 1 = 계산불가
+
+--------------------------------------------------------------
+-- 데이터 조회 - R
+select * from aug14_snack;
+--------------------------------------------------------------
+-- 이름 : 데이터
+-- 점수 : 데이터
+-- 번호 : PK 해야하니 억지로 만든거, 데이터x
+create table aug14_student(
+	s_no number(2) primary key, -- PK로 할만한게 없으면 붙이기!
+	s_name varchar2(10 char) not null,
+	s_kor number(3) not null,
+	s_eng number(3) not null,
+	s_mat number(3) not null
+);
+
+insert into aug14_student values(1, '홍길동', 50, 70, 80);
+insert into aug14_student values(2, '김길동', 80, 50, 30);
+insert into aug14_student values(3, '홍길동', 30, 0, 30);
+
+select * from aug14_student;
+
+
