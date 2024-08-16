@@ -1,0 +1,413 @@
+drop table aug16_fruit cascade constraint purge;
+
+create table aug16_fruit(
+	f_no number(2) primary key,
+	f_name varchar2(10 char) not null,
+	f_price number(6) not null,
+	f_weight number(3, 1) not null,
+	f_exp date not null
+);
+-------------------------------------------------------------
+-- 번호 : 데이터x, PK가 필요하니까 억지로 추가한거
+--		사람이 관리해야하나...
+--		-> 자동으로 관리되었으면
+-- 		-> MySQL, MariaDB : auto increment 옵션
+
+-- Oracle : DB회사 -> 인수 -> Java
+-- sequence
+--		insert 실패해도 올라감
+--		여러 테이블이 같이 사용 가능
+--		데이터를 중간에 삭제하면? 번호가 당겨지나?
+--		-> PK + seq : 1,2,3,4,... - x => 그냥 값 하나 넣으려고 사용
+
+--	sequence 만들기 (딸깍!)
+--	sequence/table은 별개의 존재지만 일반적으로 table당 sequence를 만들어 쓰는 편
+--		create sequence 시퀀스명;
+
+create sequence aug16_fruit_seq;
+
+-- sequence 사용
+--		스퀀스명.nextval
+
+-- 시간, 날짜 처리할때
+--	현재시간날짜 : sysdate
+--	특정시간날짜 : 
+--		to_date('값', '패턴') => str -> date(글자를 날짜로 바꾸는 함수)
+
+--	yyyy MM dd hh mm ss (SQL은 다 대문자로 인식 => YYYY MM DD HH MI SS AA PM HH24)
+
+insert into aug16_fruit values(aug16_fruit_seq.nextval, '사과', 30000, 1.5, sysdate);
+insert into aug16_fruit values(aug16_fruit_seq.nextval, '수박', 40000, 3.1, to_date('2024-09-01 13:30:00', 'YYYY-MM-DD HH24:MI:SS'));
+insert into aug16_fruit values(aug16_fruit_seq.nextval, '사과', 10000, 0.5, to_date('2024-08-25 11:00:00', 'YYYY-MM-DD HH24:MI:SS'));
+insert into aug16_fruit values(aug16_fruit_seq.nextval, '복숭아', 35000, 1.1, to_date('2024-10-01 11:30:00', 'YYYY-MM-DD HH24:MI:SS'));
+insert into aug16_fruit values(aug16_fruit_seq.nextval, '참외', 20000, 1.8, to_date('2024-09-01 15:00:00', 'YYYY-MM-DD HH24:MI:SS'));
+insert into aug16_fruit values(aug16_fruit_seq.nextval, '귤', 10000, 0.5, to_date('2024-12-01 10:00:00', 'YYYY-MM-DD HH24:MI:SS'));
+insert into aug16_fruit values(aug16_fruit_seq.nextval, '딸기', 50000, 1.8, to_date('2024-11-15 09:00:00', 'YYYY-MM-DD HH24:MI:SS'));
+insert into aug16_fruit values(aug16_fruit_seq.nextval, '망고', 45000, 2.5, to_date('2024-10-03 10:30:00', 'YYYY-MM-DD HH24:MI:SS'));
+insert into aug16_fruit values(aug16_fruit_seq.nextval, '배', 20000, 2.1, to_date('2024-09-15 11:30:00', 'YYYY-MM-DD HH24:MI:SS'));
+insert into aug16_fruit values(aug16_fruit_seq.nextval, '포도', 25000, 1.3, to_date('2024-10-10 10:00:00', 'YYYY-MM-DD HH24:MI:SS'));
+
+-- C 끝!(crud 에서의 c)
+
+----------------------------------------------------------------------------------------------
+
+-- R
+-- select 필드명, 필드명, ... as 별칭, 연산자 사용가능, ...
+-- from 테이블명
+-- where 조건식;
+
+-- 문자열 포함 검색
+-- 	필드명 like '패턴'
+--			   '%가' : 가로 끝나
+--			   '가%' : 가로 시작
+--			   '%가%' : 가 포함
+
+-- 통계함수 (select절에만 사용 가능)
+--	sum(필드명), avg(필드명), max(필드명), min(필드명), count(필드명), ...
+
+-- 전체 과일 모든 정보
+select * from AUG16_fruit;
+
+-- 전체 과일 이름, 가격
+select f_name, f_price from aug16_fruit;
+
+-- 전체 과일 이름, 유통기한
+select f_name, f_exp as exp_date 
+from aug16_fruit;
+
+-- 전체 과일 이름, 가격, 할인가(20%)
+select f_name, f_price, f_price * 0.8 as sale_price
+from aug16_fruit;
+
+-- 전체 과일 이름, kg당 가격
+select f_name, f_price / f_weight as kg_price
+from aug16_fruit;
+
+-- 전체 과일 평균가
+select avg(f_price) as f_price_avg
+from aug16_fruit;
+
+-- 최고가, g당 가격 최저가, 총 과일수
+select max(f_price), min(f_price / f_weight), count(*)
+from aug16_fruit;
+
+-- 가격이 20000이상인 과일 이름, 가격
+select f_name, f_price
+from aug16_fruit
+where f_price >= 20000;
+
+-- 사과 평균가
+select avg(f_price)
+from aug16_fruit
+where f_name = '사과';
+
+-- 이름에 '수' 들어있는거 이름, 가격
+select f_name, f_price
+from aug16_fruit
+where f_name like '%수%';
+
+-- 유통기한이 2024/08/20 15시 이후인 이름, 유통기한
+select f_name, f_exp
+from aug16_fruit
+where f_exp > to_date('2024/08/20 15', 'YYYY/MM/DD HH24');
+
+-- sysdate : 현재날짜시간(8/16 18:30)
+-- to_date - str->date
+-- to_char - date->str
+--		to_char(날짜, '패턴')
+--		to_char(sysdate, 'YYYYMMDD') -> '20240816'
+-- concat(글자, 글자, ...) - 문자열 결합
+--		concat( , ' 235959') -> '20240816 235959'
+
+-- to_date( , 'YYYYMMDD HH24MISS')
+
+insert into aug16_fruit values(aug16_fruit_seq.nextval, '테스트', 0, 0, to_date('2024-08-16 22:00:00', 'YYYY-MM-DD HH24:MI:SS'));
+
+-- 오늘이 가기전에 먹어치워야 했을(내일 먹으면 안되는)거 이름, 유통기한 
+select f_name, f_exp
+from aug16_fruit
+where f_exp <= to_date(
+	concat(
+		to_char(sysdate, 'YYYYMMDD')
+	, ' 235959')
+, 'YYYYMMDD HH24MISS'); 
+
+-- and or
+-- 수박 or 사과 이름, 가격
+select f_name, f_price
+from aug16_fruit
+where f_name = '수박' or f_name = '사과';
+
+-- 10000 < 가격 < 30000 이름, 가격
+select f_name, f_price
+from aug16_fruit
+-- where f_price between 10000 and 30000;  -> 이건 10000,30000원 포함
+where f_price > 10000 and f_price < 30000;
+
+-- 유통기한이 오늘 오후중에 끝나는 이름, 유통기한
+select f_name, f_exp
+from aug16_fruit
+where f_exp >= to_date(
+	concat(
+		to_char(sysdate, 'YYYYMMDD')
+	, ' 120000')
+, 'YYYYMMDD HH24MISS') and
+f_exp <= to_date(
+	concat(
+		to_char(sysdate, 'YYYYMMDD')
+	, ' 235959')
+, 'YYYYMMDD HH24MISS');
+
+-- 최고가
+select max(f_price)
+from aug16_fruit;
+
+-- subquery(sql 안에 sql 넣기)
+-- 최고가 이름, 가격
+select f_name, f_price
+from aug16_fruit
+where f_price = (
+	select max(f_price)
+	from aug16_fruit
+);
+
+-- 평균가보다 싼거 이름, 가격
+select f_name, f_price
+from aug16_fruit
+where f_price < (
+	select avg(f_price)
+	from aug16_fruit
+);
+
+----------------------------------------------------------------------------------------------
+-- RDBMS(Relational DBMS - 관계형 DB)
+--	OracleDB, MySQL, MariaDB,...
+--	테이블을 나눠서 디자인,
+--	테이블간의 관계를 중심으로 조회
+
+-- DB 모델링(설계)
+-- 	1) 주제별로 나눠서 테이블
+--	2) PK 챙기고
+-- 	3) 테이블 관계
+--		1:n이면 n쪽에 1의 PK
+--		m:n이면 PK들 모아놓은 테이블 따로
+
+--	요식업 프랜차이즈
+--		홍길동, 1999-01-01, 수원
+--		김밥천구, 종로점, 종로구123, 10테이블
+--		야채김밥, 4000원, 식사류
+
+--		김길동, 2000-02-03, 안양
+--		우동천국, 강남점, 강남구456, 7테이블
+--		튀김우동, 5000원, 식사류
+
+-- 사장, 매장, 메뉴 (+운영정보)   
+-- 사장 : 이름, 생일, 집
+-- 매장 : 이름, 지점, 주소, 테이블 수
+-- 메뉴 : 이름, 가격, 분류
+-- 운영정보 : 사장번호, 매장번호
+
+drop table aug16_ceo cascade constraint purge;
+
+create table aug16_ceo(
+	c_no number(2) primary key,
+	c_name varchar2(10 char) not null,
+	c_birthday date not null,
+	c_home varchar2(10 char) not null
+);
+
+create sequence aug16_ceo_seq;
+
+insert into aug16_ceo values(aug16_ceo_seq.nextval, '홍길동', to_date('1999-01-01', 'YYYY-MM-DD'), '수원');
+insert into aug16_ceo values(aug16_ceo_seq.nextval, '김길동', to_date('2000-02-03', 'YYYY-MM-DD'), '안양');
+insert into aug16_ceo values(aug16_ceo_seq.nextval, '최길동', to_date('2001-03-02', 'YYYY-MM-DD'), '서울');
+insert into aug16_ceo values(aug16_ceo_seq.nextval, '이길동', to_date('1990-12-02', 'YYYY-MM-DD'), '일산');
+insert into aug16_ceo values(aug16_ceo_seq.nextval, '박길동', to_date('2001-05-02', 'YYYY-MM-DD'), '광주');
+
+create table aug16_restaurant(
+	r_no number(2) primary key,
+	r_name varchar2(10 char) not null,
+	r_jijum varchar2(10 char) not null,
+	r_addr varchar2(10 char) not null,
+	r_table number(2) not null
+);
+
+create sequence aug16_restaurant_seq;
+
+insert into aug16_restaurant values(aug16_restaurant_seq.nextval, '김밥천국', '종로점', '종로구123', 10);
+insert into aug16_restaurant values(aug16_restaurant_seq.nextval, '우동천국', '강남점', '강남구456', 7);
+insert into aug16_restaurant values(aug16_restaurant_seq.nextval, '사탕천국', '종로점', '종로구125', 0);
+insert into aug16_restaurant values(aug16_restaurant_seq.nextval, '커피천국', '일산점', '일산동구125', 5);
+insert into aug16_restaurant values(aug16_restaurant_seq.nextval, '사탕사탕', '제주점', '제주시125', 3);
+
+create table aug16_menu(
+	m_no number(2) primary key,
+	m_name varchar2(10 char) not null,
+	m_price number(5) not null,
+	m_cate varchar2(10 char) not null, 
+	m_r_no number(2) not null
+);
+
+create sequence aug16_menu_seq;
+
+insert into aug16_menu values(aug16_menu_seq.nextval, '야채김밥', 3000, '식사', 1);
+insert into aug16_menu values(aug16_menu_seq.nextval, '고기김밥', 5000, '식사', 1);
+insert into aug16_menu values(aug16_menu_seq.nextval, '김치김밥', 3500, '식사', 1);
+insert into aug16_menu values(aug16_menu_seq.nextval, '참치김밥', 4000, '식사', 1);
+insert into aug16_menu values(aug16_menu_seq.nextval, '우동', 6000, '식사', 2);
+insert into aug16_menu values(aug16_menu_seq.nextval, '김치우동', 7000, '식사', 2);
+insert into aug16_menu values(aug16_menu_seq.nextval, '매운우동', 6500, '식사', 2);
+insert into aug16_menu values(aug16_menu_seq.nextval, '야끼우동', 7000, '식사', 2);
+insert into aug16_menu values(aug16_menu_seq.nextval, '사탕', 1000, '간식', 5);
+insert into aug16_menu values(aug16_menu_seq.nextval, '아메리카노', 2000, '음료', 3);
+insert into aug16_menu values(aug16_menu_seq.nextval, '아이스티', 2000, '음료', 3);
+insert into aug16_menu values(aug16_menu_seq.nextval, '초코라떼', 3500, '음료', 3);
+insert into aug16_menu values(aug16_menu_seq.nextval, '바닐라라떼', 3500, '음료', 3);
+insert into aug16_menu values(aug16_menu_seq.nextval, '아이스크림', 3000, '음료', 3);
+insert into aug16_menu values(aug16_menu_seq.nextval, '고구마라떼', 3500, '음료', 3);
+
+
+create table aug16_run(
+	r_no number(2) primary key,
+	r_c_no number(2) not null,
+	r_r_no number(2) not null
+);
+
+create sequence aug16_run_seq;
+
+insert into aug16_run values(aug16_run_seq.nextval, 1, 3);
+insert into aug16_run values(aug16_run_seq.nextval, 5, 4);
+insert into aug16_run values(aug16_run_seq.nextval, 2, 5);
+insert into aug16_run values(aug16_run_seq.nextval, 3, 1);
+insert into aug16_run values(aug16_run_seq.nextval, 4, 2);
+
+select * from aug16_ceo;
+select * from aug16_restaurant;
+select * from aug16_menu;
+select * from aug16_run;
+
+-- 전체 메뉴명, 가격
+select m_name, m_price
+from AUG16_MENU;
+
+-- 평균가
+select avg(m_price)
+from AUG16_MENU;
+
+-- 테이블 가장 많은 매장명, 지점명
+select r_name, r_jijum
+from AUG16_restaurant
+where r_table = (
+	select max(r_table)
+	from AUG16_restaurant
+);
+
+-- 최연장자 사장님네 메뉴명, 가격
+select m_name, m_price
+from aug16_menu
+where m_r_no in (
+	select r_r_no
+	from aug16_run
+	where r_c_no = (
+		select c_no
+		from aug16_ceo
+		where c_birthday = (
+			select min(c_birthday)
+			from aug16_ceo
+		)
+	)
+);
+
+
+-- 최연장자 사장님 이름, 생일, 집
+select c_name, c_birthday, c_home
+from aug16_ceo
+where c_birthday = (
+	select min(c_birthday)
+	from aug16_ceo
+);
+
+
+-- subquery
+--		where절에 통계함수
+
+
+-- 김밥천구 종로점의 번호
+select r_no
+from AUG16_restaurant
+where r_name = '김밥천국' and r_jijum = '종로점';
+
+-- 김밥천국 종로점의 메뉴명 가격
+select m_name, m_price
+from aug16_menu
+where m_r_no = (
+	select r_no
+	from AUG16_restaurant
+	where r_name = '김밥천국' and r_jijum = '종로점'
+);
+
+-- 제일 싼 메뉴는 어디가면 먹을 수 있나?(주소)
+
+-- 제일 싼 메뉴
+select min(m_price)
+from aug16_menu;
+
+-- 제일 싼 메뉴를 판매하는 번호
+select m_r_no
+from aug16_menu
+where m_price = (
+	select min(m_price)
+	from aug16_menu
+);
+
+-- 제일 싼 메뉴는 어디가면 먹을 수 있나?(주소)
+select r_addr
+from aug16_restaurant
+where r_no = (
+	select m_r_no
+	from aug16_menu
+	where m_price = (
+		select min(m_price)
+		from aug16_menu
+));
+
+
+-- 싼 메뉴가 겹칠때
+select r_addr
+from aug16_restaurant
+where r_no in (
+	select m_r_no
+	from aug16_menu
+	where m_price = (
+		select min(m_price)
+		from aug16_menu
+));
+
+-- 가장 나이가 많은 사장이 운영하는 가게에서 가장 비싼 메뉴의 이름
+-- 		가장 나이가 많은 사장의 번호
+-- 		그 사장이 운영하는 가게의 번호
+-- 		그 가게의 가장 비싼 메뉴의 이름
+
+
+-- 최고가 메뉴 파는 사장님 이름, 생일
+select c_name, c_birthday
+from aug16_ceo
+where c_no in (
+	select r_c_no
+	from aug16_run
+	where r_r_no in (
+		select m_r_no
+		from aug16_menu
+		where m_price in (
+			select max(m_price)
+			from aug16_menu
+		)
+	)
+);
+
+
+
+
+
+
+
