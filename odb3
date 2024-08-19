@@ -2,6 +2,7 @@
 -- from 테이블명, 테이블명, subquery, ...
 -- where 조건식
 -- group by 필드명, 필드명, ...
+-- having 조건식 <- group by한 결과 필터링
 -- order by 필드명, 필드명 (desc), ...;
 
 -- 주소가 종로구 어쩌고인 식당의 메뉴명 가격
@@ -168,27 +169,89 @@ order by r_name, m_cate;
 
 -- 사장이름별 -> 카테별 메뉴 평균가, 갯수
 -- 사장이름별 -> 카테별 가나다
+select c_name, m_cate, avg(m_price), count(*)
+from aug16_ceo, aug16_run, aug16_menu
+where c_no = r_c_no and r_r_no = m_r_no
+group by c_name, m_cate
+order by c_name, m_cate;
+
+-- 카테별 평균가
+-- 근데 평균 계산할때 가격이 5000원 미만인 메뉴는 빼고 (데이터 필터링 -> 평균가에 영향)
+-- 카테별 가나다순
+select m_cate, avg(m_price)
+from aug16_menu
+where m_price >= 5000
+group by m_cate
+order by m_cate;
+
+-- 카테별 평균가
+-- 카테별 가나다순
+-- 근데 평균가 구한게 5000원 미만인거는 보여주지마(결과 필터링)
+select m_cate, avg(m_price)
+from aug16_menu
+group by m_cate
+having avg(m_price) >= 5000
+order by m_cate;
+
+-- 종로구 위치한 매장
+-- 매장명별, 카테별 평균가
+-- 매장명 가나다, 카테 가나다순
+-- 평균가 3000원 미만인거 빼고
+select r_name, m_cate, avg(m_price)
+from aug16_menu, aug16_restaurant
+where r_no = m_r_no and r_addr like '%종로구%'
+group by r_name, m_cate
+having avg(m_price) >= 3000
+order by r_name, m_cate;
 
 
 
+------------------------------------------------------------------------------------------
+
+-- 데이터 CRUD
+-- C : insert
+-- R : select
+
+-- U : update
+-- update 테이블명
+-- set 필드명=값, 필드명=값, ...
+-- where 조건식;
+
+-- 야채김밥 5000원으로 수정
+update aug16_menu
+set m_price = 5000
+where m_name = '야채김밥';
+
+-- 밥 시리즈 500원 인상
+update aug16_menu
+set m_price = m_price + 500  -- m_price += 500 이런식으로는 안됨
+where m_name like '%밥%';
+
+-- 김밥천국 종로점 전 메뉴 10% 인상
+update aug16_menu
+set m_price = m_price *1.1
+where m_r_no = (
+	select r_no
+	from aug16_restaurant
+	where r_jijum = '종로점' and r_name = '김밥천국'
+);
 
 
+-- D : delete
+-- delete from 테이블명
+-- where 조건식
 
+-- 야채김밥 삭제
+delete from aug16_menu
+where m_name = '야채김밥';
 
+-- 테이블 수 가장 적은 매장 폐업    (7번 매장 메뉴는???)
+delete from aug16_restaurant
+where r_table = (
+	select min(r_table)
+	from aug16_restaurant
+);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+select * from aug16_menu;
+select * from aug16_restaurant;
 
