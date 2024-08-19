@@ -1,0 +1,194 @@
+-- select 필드명, 필드명 as 별칭, 연산자 사용가능, 통계함수, ...
+-- from 테이블명, 테이블명, subquery, ...
+-- where 조건식
+-- group by 필드명, 필드명, ...
+-- order by 필드명, 필드명 (desc), ...;
+
+-- 주소가 종로구 어쩌고인 식당의 메뉴명 가격
+select m_name, m_price
+from aug16_menu
+where m_r_no in(
+	select r_no
+	from aug16_restaurant
+	where r_addr like '%종로구%'
+);
+
+-- join : 테이블 여러개를 붙여서...
+select *
+from aug16_restaurant, aug16_menu
+where r_no = m_r_no;
+
+-- 평균보다 비싼 메뉴명, 가격, 식당명, 지점명
+select m_name, m_price, r_name, r_jijum
+from aug16_restaurant, aug16_menu
+where r_no = m_r_no and m_price > (
+	select avg(m_price)
+	from aug16_menu
+);
+
+-- 테이블 수 가장 적은 식당명, 지점명, 사장이름, 생일
+select r_name, r_jijum, c_name, c_birthday
+from aug16_restaurant, aug16_ceo, aug16_run
+where c_no = r_c_no and r_r_no = AUG16_RESTAURANT.r_no and r_table = (
+	select min(r_table)
+	from aug16_restaurant
+);
+
+-- 최연장자 사장님네 메뉴명 가격
+select m_name, m_price
+from aug16_ceo, aug16_run, aug16_menu
+where c_no = r_c_no and r_r_no = m_r_no and c_birthday = (
+	select min(c_birthday)
+	from aug16_ceo
+);
+
+-- join vs subquery
+-- join : 원래 데이터보다 용량 크게해서 RAM..
+-- subquery : 원래 데이터에서 줄여서 RAM..
+-- -> join은 최대한 안쓰는게 좋은
+
+-- 테이블이 3개 이상인 매장의 매장명, 지점명, 메뉴명, 가격
+select r_name, r_jijun, m_name, m_price
+from aug16_restaurant, aug16_menu
+where r_no = m_r_no and r_table >= 3;
+
+-- 테이블이 3개 이상인 매장의 매장명, 지점명, 메뉴명, 가격
+-- 을 매장명 가나다순 -> 메뉴명 가나다역순
+select r_name, r_jijun, m_name, m_price
+from aug16_restaurant, aug16_menu
+where r_no = m_r_no and r_table >= 3
+order by r_name, m_name desc;
+
+-- 식사류를 파는 매장명, 지점명, 주소
+select r_name, r_jijum, r_addr
+from aug16_restaurant
+where r_no in (
+	select m_r_no
+	from aug16_menu
+	where m_cate = '식사'
+);
+
+-- 식사류를 파는 매장명, 지점명, 주소, 테이블수
+-- 테이블 많은 순서 -> 매장명 가나다 -> 지점명 가나다
+select r_name, r_jijum, r_addr, r_table
+from aug16_restaurant
+where r_no in (
+	select m_r_no
+	from aug16_menu
+	where m_cate = '식사'
+)
+order by r_table desc, r_name, r_jijum;
+
+-- 메뉴명, 가격
+-- 메뉴명 가나다 -> 가격 싼 순서
+select m_name, m_price
+from AUG16_MENU
+order by m_name, m_price;
+
+-- 페이지
+-- 한 페이지당 4개씩
+-- 1p : 1 2  3  4
+-- 2p : 5 6  7  8
+-- 3p : 9 10 11 12
+-- 페이지번호2 -> 시작데이터번호5, 끝데이터번호 8
+
+-- PK + seq
+--		seq : insert 실패해도 올라감
+--			  여러 테이블이 공용으로 사용
+--			  2번 데이터 지워지면 뒤에가 당겨지나? -> x
+
+-- rownum
+--		select할때마다 부여되는 가상 필드
+--		*랑 같이 못씀
+--		order by보다 먼저
+--		1번부터 조회해야
+
+
+select m_no, m_name, m_price
+from aug16_menu
+order by m_price;
+
+select *
+from (
+	select rownum as rn, m_no, m_name, m_price
+	from (
+		select m_no, m_name, m_price
+		from aug16_menu
+		order by m_price
+	)
+where rn >= 3 and rn <= 5;
+
+-- 메뉴명, 가격
+-- 메뉴명 가나다 -> 가격 싼순서
+-- 5~8번까지만
+select *
+from (
+	select rowname, m_name, m_price
+	from (
+		select m_name, m_price
+		from AUG16_MENU
+		order by m_name, m_price
+	)
+)
+where rn >=5 and rn <= 8;
+
+-- 제일 비싼 메뉴만 빼고
+-- 메뉴명, 가격, 사장이름
+-- 메뉴명 가나다 -> 가격 싼 순서
+-- 3~5번까지만
+select *
+from (
+	select rownum, m_name, m_price, c_name
+	from (
+		select m_name, m_price, c_name
+		from aug16_ceo, aug_run, aug16_menu
+		where c_no = r_c_no and r_r_no = m_r_no and m_price < (
+			select max(m_price)
+			from aug16_menu
+		)
+		order by m_name, m_price
+	)
+)
+where rn >= 3 and rn <= 5;
+
+-- 카테고리별 메뉴 평균가
+-- 카테고리 가나다
+select m_cate, avg(m_price)
+from aug16_menu
+group by m_cate
+order by m_cate;
+
+-- 식당명별 -> 카테별 메뉴 최고가, 최소가
+-- 식당명별 가나다
+select r_name, m_cate, max(m_price), min(m_price)
+from aug16_Restaurant, aug16_menu
+where r_no = m_r_no
+group by r_name, m_cate
+order by r_name, m_cate;
+
+-- 사장이름별 -> 카테별 메뉴 평균가, 갯수
+-- 사장이름별 -> 카테별 가나다
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
