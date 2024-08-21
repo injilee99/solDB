@@ -1,0 +1,66 @@
+-- 회사 : 오리온 수원 100명
+-- 상품 : 초코파이 5000원 500.5g 2023/09/01
+
+-- DB설계 -> 테스트용 데이터 하나 넣어보고
+-- RDBMS : 테이블 나눠서 디자인, 테이블간의 관계를 이용해 해결..
+-- 1) 테이블 나눠서
+-- 2) 테이블간의 관계 1:n?, m:n?
+
+create table aug21_company(
+	c_name varchar2(10 char) primary key,
+	c_addr varchar2(10 char) not null,
+	c_emp number(3) not null
+);
+
+create table aug21_snack(
+	s_no number(2) primary key,
+	s_name varchar2(10 char) not null,
+	s_price number(5) not null,
+	s_weight number(5,1) not null,
+	s_exp date not null,
+	s_c_name varchar2(10 char) not null
+);
+
+create sequence aug21_snack_seq;
+
+insert into aug21_company values('오리온', '수원', 100);
+
+insert into aug21_snack values(aug21_snack_seq.nextval, '초코파이', 5000, 500.5, to_date('2023/09/01', 'YYYY/MM/DD'), '오리온');
+
+
+select * from aug21_company;
+select * from aug21_snack;
+
+-- 등록되어있지 않은 회사명의 과자가?
+-- 회사 폐업 -> 과자는? -> 과자도 지우자 : 자동으로
+
+-- 웹 사이트
+-- 회원가입 -> 욕 쓰고 -> 탈퇴하면
+-- 탈퇴했을때 그 사람이 쓴 글
+--		지우자 : 굳이 그렇게까지
+--		지우지말자 : 
+
+drop table aug21_snack cascade constraint purge;
+
+-- foreign key(외래키)
+-- aug21_company c_name에 없는거, s_c_name에 쓸 수 없음
+-- 회사 데이터 없어지면 과자도 자동 삭제
+
+-- constraint 제약조건명 foreign key(필드명) references 테이블명(필드명) on delete cascade
+create table aug21_snack(
+	s_no number(2) primary key,
+	s_name varchar2(10 char) not null,
+	s_price number(5) not null,
+	s_weight number(5,1) not null,
+	s_exp date not null,
+	s_c_name varchar2(10 char) not null,
+	constraint snack_maker foreign key(s_c_name) references aug21_company(c_name) on delete cascade
+);
+
+-- snack도 지워짐
+delete from aug21_company;
+select * from aug21_snack;
+
+select count(*) from aug21_snack;
+
+
